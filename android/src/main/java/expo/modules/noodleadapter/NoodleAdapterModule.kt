@@ -2,46 +2,69 @@ package expo.modules.noodleadapter
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import org.worldcubeassociation.tnoodle.scrambles.InvalidScrambleException
+import org.worldcubeassociation.tnoodle.scrambles.Puzzle
+
+import org.worldcubeassociation.tnoodle.puzzle.ClockPuzzle
+import org.worldcubeassociation.tnoodle.puzzle.FourByFourCubePuzzle
+import org.worldcubeassociation.tnoodle.puzzle.MegaminxPuzzle
+import org.worldcubeassociation.tnoodle.puzzle.NoInspectionFiveByFiveCubePuzzle
+import org.worldcubeassociation.tnoodle.puzzle.NoInspectionFourByFourCubePuzzle
+import org.worldcubeassociation.tnoodle.puzzle.NoInspectionThreeByThreeCubePuzzle
+import org.worldcubeassociation.tnoodle.puzzle.PyraminxPuzzle
+import org.worldcubeassociation.tnoodle.puzzle.SkewbPuzzle
+import org.worldcubeassociation.tnoodle.puzzle.SquareOnePuzzle
+import org.worldcubeassociation.tnoodle.puzzle.ThreeByThreeCubeFewestMovesPuzzle
+import org.worldcubeassociation.tnoodle.puzzle.ThreeByThreeCubePuzzle
+import org.worldcubeassociation.tnoodle.puzzle.TwoByTwoCubePuzzle
+
+class ScrambleGenerator(private val puzzleType: String) {
+    private var puzzle: Puzzle? = null
+
+    init {
+        puzzle = try {
+            when (puzzleType) {
+                "222" -> TwoByTwoCubePuzzle()
+                "333" -> ThreeByThreeCubePuzzle()
+                "444" -> FourByFourCubePuzzle()
+                "555" -> FourByFourCubePuzzle()
+                "666" -> FourByFourCubePuzzle()
+                "777" -> FourByFourCubePuzzle()
+                "minx" -> MegaminxPuzzle()
+                "pyram" -> PyraminxPuzzle()
+                "skewb" -> SkewbPuzzle()
+                "clock" -> ClockPuzzle()
+                "sq1" -> SquareOnePuzzle()
+                "333oh" -> ThreeByThreeCubePuzzle()
+                "333bf" -> NoInspectionThreeByThreeCubePuzzle()
+                "444bf" -> NoInspectionFourByFourCubePuzzle()
+                "555bf" -> NoInspectionFiveByFiveCubePuzzle()
+                "333fmc" -> ThreeByThreeCubeFewestMovesPuzzle()
+                else -> ThreeByThreeCubePuzzle()
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun getPuzzle(): Puzzle? {
+        return puzzle
+    }
+
+    fun setPuzzle(puzzle: Puzzle) {
+        this.puzzle = puzzle
+    }
+}
 
 class NoodleAdapterModule : Module() {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
-  override fun definition() = ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('NoodleAdapter')` in JavaScript.
-    Name("NoodleAdapter")
+    private var scrambleGenerator: ScrambleGenerator? = null
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
+    override fun definition() = ModuleDefinition {
+        Name("NoodleAdapter")
 
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
+        Function("getScramble") { puzzleType: String ->
+            scrambleGenerator = ScrambleGenerator(puzzleType)
+            return@Function scrambleGenerator?.getPuzzle()?.generateScramble() ?: "Invalid puzzle type"
+        }
     }
-
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { value: String ->
-      // Send an event to JavaScript.
-      sendEvent("onChange", mapOf(
-        "value" to value
-      ))
-    }
-
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(NoodleAdapterView::class) {
-      // Defines a setter for the `name` prop.
-      Prop("name") { view: NoodleAdapterView, prop: String ->
-        println(prop)
-      }
-    }
-  }
 }

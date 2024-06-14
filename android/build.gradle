@@ -41,3 +41,7 @@ android {
     abortOnError false
   }
 }
+
+dependencies {
+  implementation 'org.worldcubeassociation.tnoodle:lib-scrambles:0.18.1'
+}
